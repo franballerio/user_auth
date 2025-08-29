@@ -14,59 +14,61 @@ const User = Schema('User', {
 })
 
 export class UserDB {
-    static async create({ email, password }) {
-        // validate user first
-        const validUser = validateUser({ email, password })
+  static async create({ email, password }) {
+    // validate user first
+    const validUser = validateUser({ email, password })
 
-        if (validUser.success) {
-            const user = User.findOne({ email })
-            if (!user) {
-                const id = crypto.randomUUID();
-                const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
-                
-                User.create({
-                    _id: id,
-                    email,
-                    password: hashedPassword
-                }).save()
-                
-                return id
-            } else {
-                throw new Error("User already exists")
-            }
+    if (validUser.success) {
+      const user = User.findOne({ email })
+      if (!user) {
+        const id = crypto.randomUUID()
+        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
 
+        User.create({
+          _id: id,
+          email,
+          password: hashedPassword
+        }).save()
+
+        return id
+      } else {
+        throw new Error('User already exists')
+      }
+    } else {
+      return validUser.error.message
+      // return z.treeifyError(validUser.error).properties
+    }
+  }
+
+  static getUsers() {
+    return User.find(user => user)
+  }
+
+  static clear() {
+    User.remove(user => user)
+  }
+
+  static async login({ email, password }) {
+    const validUser = validateUser({ email, password })
+
+    if (validUser.success) {
+      const user = User.findOne({ email })
+
+      if (user) {
+        const validPass = await bcrypt.compare(password, user.password)
+        if (validPass) {
+          return {
+            message: 'Login Succesful',
+            email: user.email
+          }
         } else {
-            return validUser.error.message
-            //return z.treeifyError(validUser.error).properties
+          throw new Error('Incorrect password')
         }
-    }   
-
-    static getUsers() {
-        return User.find(user => user)
+      } else {
+        throw new Error('User doesnt exist')
+      }
+    } else {
+      throw new Error('Invalid input')
     }
-
-    static clear() {
-        User.remove(user => user)
-    }
-
-    static async login({ email, password }) {
-        const validUser = validateUser({ email, password })
-
-        if (validUser.success) {
-            const user = User.findOne({ email })
-
-            if (user) {
-                const validPass = await bcrypt.compare(password, user.password)
-                if (validPass) {
-                    return {email: user.email}
-                } else {
-                    throw new Error("Incorrect password")
-                }
-            } else {
-                throw new Error("User doesn't exist")
-            }
-        } else {
-            throw new Error("Invalid input")
-        }
-    }
-} 
+  }
+}
