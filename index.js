@@ -1,14 +1,25 @@
 import express from 'express'
+import jwt from 'jsonwebtoken'
+import cookieParser from 'cookie-parser'
 
-import { PORT } from './config.js'
+import { PORT, JWT_SECRET } from './config.js'
 import { UserDB } from './db.js'
 
 const app = express()
 app.use(express.json())
+app.use(cookieParser())
 app.set('view engine', 'ejs')
 
 app.get('/', (req, res) => {
-  res.render('index')
+  const token = req.cookies.acces_token
+
+  if (!token) return res.render('index')
+
+  try {
+    const userData = jwt.verify(token, JWT_SECRET)
+    res.render('index', userData)
+  } catch (error) {
+  }  
 })
 
 // users routes
@@ -33,11 +44,40 @@ app.post('/login', async (req, res) => {
   const { email, password } = req.body
 
   try {
-    const login = await UserDB.login({ email, password })
+    const user = await UserDB.login({ email, password })
+    // create a jwtoken for session auth
+    const token = jwt.sign(
+      {id: user.id, email: user.email},
+      JWT_SECRET,
+      {expiresIn: '1h'}
+    )
     console.log('User validated')
-    res.send(login)
+    res
+      // send the token to the client so it can resend it for auth
+      .cookie('acces-cookie', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 1000 * 60 * 60
+      })
+      .send(user)
   } catch (error) {
     res.status(401).send(error.message)
+  }
+})
+
+app.get('/protected', (req, res) => {
+  const token = req.cookies.acces_token
+
+  if (!token) {
+    res.status(301).send('Acces denied')
+  }
+
+  try {
+    const userData = jwt.verify(token, JWT_SECRET)
+    res.render('protected', userData)
+  } catch (error) {
+    res.status(401).send('Acces denied')
   }
 })
 

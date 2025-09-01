@@ -1,7 +1,7 @@
 import DBlocal from 'db-local'
 import bcrypt from 'bcrypt'
-import { SALT_ROUNDS } from './config.js'
 
+import { SALT_ROUNDS } from './config.js'
 import { validateUser, validateUpdate } from './schemas/user.js'
 // import { z } from 'zod'
 
@@ -59,6 +59,7 @@ export class UserDB {
         if (validPass) {
           return {
             message: 'Login Succesful',
+            _id: user._id,
             email: user.email
           }
         } else {
