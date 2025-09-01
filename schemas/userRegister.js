@@ -13,6 +13,8 @@ export const userSchema = z.object({
 
   email: z.email({ message: 'Invalid email address.' }),
 
+  user_name: z.string().min(0).max(20),
+
   // 🔐 IMPORTANT: This is for validation, NOT for storage.
   // You should always HASH the password before saving it to a database.
   password: z.string()
@@ -27,11 +29,7 @@ export const userSchema = z.object({
   updatedAt: z.date().default(() => new Date())
 })
 
-export function validateUser (data) {
+export function validateRegister (data) {
   const result = userSchema.safeParse(data)
   return result
-}
-
-export function validateUpdate (data) {
-  return userSchema.partial().safeParse(data)
 }

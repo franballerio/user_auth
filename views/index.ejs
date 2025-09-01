@@ -81,19 +81,19 @@
 
 <body>
     <div class="container">
-        <% if (typeof email !== 'undefined' ) { %>
+        <% if (typeof user_name !== 'undefined' ) { %>
             <div class="form-container">
-                <h2>Hola <%= email %>!</h2>
+                <h2>Hola <%= user_name %>!</h2>
                 <p>Estas en el panel de administracion</p>
                 <button id="close-session">Cerrar sesion</button>
             </div>
             <% } %>
 
-                <% if (typeof email=== 'undefined' ) { %>
+                <% if (typeof user_name === 'undefined' ) { %>
                     <div class="form-container">
                         <form id="login-form">
                             <h2>Login</h2>
-                            <label for="login-email">email</label>
+                            <label for="login-email">email or user name</label>
                             <input type="text" id="login-email" name="email" required>
 
                             <label for="login-password">Password</label>
@@ -109,6 +109,9 @@
                             <h2>Register</h2>
                             <label for="register-email">email</label>
                             <input type="text" id="register-email" name="email" required>
+
+                            <label for="register-username">user name</label>
+                            <input type="text" id="register-username" name="username" required>                            
 
                             <label for="register-password">Password</label>
                             <input type="password" id="register-password" name="password" required>
@@ -134,7 +137,7 @@
 
         loginForm?.addEventListener('submit', e => {
             e.preventDefault()
-            const email = $('#login-email').value
+            const userORemail = $('#login-email').value
             const password = $('#login-password').value
 
             fetch('/login', {
@@ -142,7 +145,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ userORemail, password })
             })
                 .then(res => {
                     if (res.ok) {
@@ -161,9 +164,10 @@
         registerForm?.addEventListener('submit', e => {
             e.preventDefault()
             const email = $('#register-email').value
+            const user_name = $('#register-username').value
             const password = $('#register-password').value
             const confirmPassword = $('#resgister-confirm-password').value
-            console.log(email, password, confirmPassword)
+            console.log(email, user_name, password, confirmPassword)
             if (password != confirmPassword) {
                 alert('Passwords do not match')
                 return
@@ -174,7 +178,7 @@
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ email, password })
+                body: JSON.stringify({ email, user_name, password })
             })
                 .then(res => {
                     console.log(res)

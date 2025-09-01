@@ -10,16 +10,25 @@ app.use(express.json())
 app.use(cookieParser())
 app.set('view engine', 'ejs')
 
-app.get('/', (req, res) => {
-  const token = req.cookies.acces_token
-
-  if (!token) return res.render('index')
+app.use((req, res, next) => {
+  const token = req.cookies.access_cookie
+  req.session = { userData: null }
 
   try {
-    const userData = jwt.verify(token, JWT_SECRET)
+    const data = jwt.verify(token, JWT_SECRET)
+    req.session.userData = data
+  } catch {}
+
+  next()
+})
+
+app.get('/', (req, res) => {
+  const { userData } = req.session
+  if (!userData) return res.render('index')
+
+  try {
     res.render('index', userData)
-  } catch (error) {
-  }  
+  } catch {}  
 })
 
 // users routes
@@ -29,11 +38,12 @@ app.get('/users', (req, res) => {
 })
 
 app.post('/register', async (req, res) => {
-  const { email, password } = req.body
+  console.log(req.body)
+  const { email, user_name, password } = req.body
   try {
     // the db manager creates the user and returns the id
-    const id = await UserDB.create({ email, password })
-    console.log(`Usuario creado correctamente ${id}`)
+    const id = await UserDB.create({ email, user_name, password })
+    console.log(`User created id: ${id}`)
     res.send({ id })
   } catch (error) {
     res.status(400).send(error.message)
@@ -41,20 +51,22 @@ app.post('/register', async (req, res) => {
 })
 
 app.post('/login', async (req, res) => {
-  const { email, password } = req.body
+  const { userORemail, password } = req.body
+  console.log(userORemail)
+  console.log(password)
 
   try {
-    const user = await UserDB.login({ email, password })
+    const user = await UserDB.login({ userORemail, password })
     // create a jwtoken for session auth
     const token = jwt.sign(
-      {id: user.id, email: user.email},
+      { id: user.id, email: user.email, user_name: user.user_name },
       JWT_SECRET,
-      {expiresIn: '1h'}
+      { expiresIn: '1h' }
     )
     console.log('User validated')
     res
       // send the token to the client so it can resend it for auth
-      .cookie('acces-cookie', token, {
+      .cookie('access_cookie', token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -67,21 +79,17 @@ app.post('/login', async (req, res) => {
 })
 
 app.get('/protected', (req, res) => {
-  const token = req.cookies.acces_token
+  const { userData } = req.session
 
-  if (!token) {
-    res.status(301).send('Acces denied')
-  }
-
-  try {
-    const userData = jwt.verify(token, JWT_SECRET)
-    res.render('protected', userData)
-  } catch (error) {
-    res.status(401).send('Acces denied')
-  }
+  if (!userData) res.status(403).send('Acces denied')
+  res.render('protected', userData)
 })
 
-app.post('/logout', (req, res) => { })
+app.post('/logout', (req, res) => {
+  res
+    .clearCookie('access_cookie')
+    .json({message: 'Logout Successful'})
+})
 
 app.delete('/users', (req, res) => {
   UserDB.clear()
