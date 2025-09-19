@@ -1,37 +1,9 @@
-import express from 'express'
-import jwt from 'jsonwebtoken'
-import cookieParser from 'cookie-parser'
+import router from 'express'
+import { Controller } from './users.controllers.js'
 
-import { PORT, JWT_SECRET } from './config/config.js'
-import { UserDB } from './db.js'
+export const router = router()
+const controller = new Controller({ model })
 
-const app = express()
-app.use(express.json())
-app.use(cookieParser())
-app.set('view engine', 'ejs')
-
-app.use((req, res, next) => {
-  const token = req.cookies.access_cookie
-  req.session = { userData: null }
-
-  try {
-    const data = jwt.verify(token, JWT_SECRET)
-    req.session.userData = data
-  } catch {}
-
-  next()
-})
-
-app.get('/', (req, res) => {
-  const { userData } = req.session
-  if (!userData) return res.render('index')
-
-  try {
-    res.render('index', userData)
-  } catch {}  
-})
-
-// users routes
 app.get('/users', (req, res) => {
   const users = UserDB.getUsers()
   res.json(users)
@@ -78,13 +50,6 @@ app.post('/login', async (req, res) => {
   }
 })
 
-app.get('/protected', (req, res) => {
-  const { userData } = req.session
-
-  if (!userData) res.status(403).send('Acces denied')
-  res.render('protected', userData)
-})
-
 app.post('/logout', (req, res) => {
   res
     .clearCookie('access_cookie')
@@ -94,8 +59,4 @@ app.post('/logout', (req, res) => {
 app.delete('/users', (req, res) => {
   UserDB.clear()
   res.send(200)
-})
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`)
 })

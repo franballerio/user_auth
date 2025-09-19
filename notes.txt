@@ -1,0 +1,3 @@
+Notes for the process of the creation of the API:
+    - we can have different db models for different or even one components, thats the 
+    idea of models folder on each component
