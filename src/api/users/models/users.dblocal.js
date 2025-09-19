@@ -1,10 +1,7 @@
 import DBlocal from 'db-local'
 import bcrypt from 'bcrypt'
 
-import { SALT_ROUNDS } from './config/config.js'
-import { validateRegister } from './schemas/userRegister.js'
-import { validateLogin } from './schemas/userLogin.js'
-
+import { SALT_ROUNDS } from '../../../config/config.js'
 
 const { Schema } = new DBlocal({ path: './db' })
 // this is the local database, is like a create table
@@ -17,70 +14,55 @@ const User = Schema('User', {
 
 export class UserDB {
   static async create({ email, user_name, password }) {
-    // validate user first
-    const validUser = validateRegister({ email, user_name, password })
 
-    console.log(validUser)
-
-    if (validUser.success) {
-      const existentEmail = User.findOne({ email })
-      const existentUser_name =  User.findOne({ user_name })
-      if (!existentUser_name && !existentEmail) {
-        const id = crypto.randomUUID()
-        const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
-
-        User.create({
-          _id: id,
-          email,
-          user_name,
-          password: hashedPassword
-        }).save()
-
-        return id
-      } else {
-        throw new Error('Already registered')
+    const existentEmail = User.findOne({ email })
+    const existentUser_name = User.findOne({ user_name })
+    
+    if (!existentUser_name && !existentEmail) {
+      
+      const user = {
+        _id: crypto.randomUUID(),
+        email: email,
+        user_name: user_name,
+        password: await bcrypt.hash(password, SALT_ROUNDS)
       }
+
+      User.create(user).save()
+
+      return user
     } else {
-      return validUser.error.message
-      // return z.treeifyError(validUser.error).properties
+      throw new Error('Already registered')
     }
   }
 
-  static getUsers() {
+  static users() {
     return User.find(user => user)
   }
 
   static clear() {
     User.remove(user => user)
+    return
   }
 
   static async login({ userORemail, password }) {
 
-    const validUser = validateLogin({ 
-      credential: userORemail,
-      password: password 
-    })
+    const [ user ]  = User.find(u => u.user_name === userORemail || u.email === userORemail)
 
-    if (validUser.success) {
-      const [ user ]  = User.find(u => u.user_name === userORemail || u.email === userORemail)
+    if (user) {
+      const validPass = await bcrypt.compare(password, user.password)
 
-      if (user) {
-        const validPass = await bcrypt.compare(password, user.password)
-        if (validPass) {
-          return {
-            message: 'Login Succesful',
-            _id: user._id,
-            email: user.email,
-            user_name: user.user_name
-          }
-        } else {
-          throw new Error('Invalid Credentials')
+      if (validPass) {
+        return {
+          message: 'Login Succesful',
+          _id: user._id,
+          email: user.email,
+          user_name: user.user_name
         }
       } else {
         throw new Error('Invalid Credentials')
       }
     } else {
-      throw new Error('Invalid input')
+      throw new Error('Invalid Credentials')
     }
   }
 }
