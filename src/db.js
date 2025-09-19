@@ -1,7 +1,7 @@
 import DBlocal from 'db-local'
 import bcrypt from 'bcrypt'
 
-import { SALT_ROUNDS } from './config.js'
+import { SALT_ROUNDS } from './config/config.js'
 import { validateRegister } from './schemas/userRegister.js'
 import { validateLogin } from './schemas/userLogin.js'
 // import { z } from 'zod'

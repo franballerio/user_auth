@@ -2,7 +2,7 @@ import express from 'express'
 import jwt from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 
-import { PORT, JWT_SECRET } from './config.js'
+import { PORT, JWT_SECRET } from './config/config.js'
 import { UserDB } from './db.js'
 
 const app = express()
