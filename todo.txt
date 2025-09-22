@@ -1,0 +1,5 @@
+tasks to improve the code:
+    x add eslint 
+    x create an auth util, to handle token creation outside the controller logic
+    - create an error handler to centralize error
+    - 

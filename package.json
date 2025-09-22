@@ -6,22 +6,29 @@
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "node --watch ./src/app.js"
+    "dev": "node --watch ./src/app.js",
+    "lint": "eslint ."
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.17.0",
   "dependencies": {
     "bcrypt": "6.0.0",
     "cookie-parser": "1.4.7",
-    "db-local": "^3.1.0",
+    "db-local": "3.1.0",
     "dotenv": "17.2.1",
     "ejs": "3.1.10",
     "express": "5.1.0",
     "jsonwebtoken": "9.0.2",
-    "pnpm": "^10.17.0",
+    "pnpm": "10.17.0",
     "standard": "17.1.2",
     "zod": "4.1.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.36.0",
+    "@stylistic/eslint-plugin-js": "4.4.1",
+    "eslint": "9.36.0",
+    "globals": "16.4.0"
   }
 }

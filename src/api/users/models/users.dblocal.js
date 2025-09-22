@@ -46,23 +46,20 @@ export class UserDB {
 
   static async login({ userORemail, password }) {
 
-    const [ user ]  = User.find(u => u.user_name === userORemail || u.email === userORemail)
+    const user = await User.findOne(u => u.user_name === userORemail || u.email === userORemail)
+    console.log(user)
+    const validPassw = user === undefined
+      ? false 
+      : await bcrypt.compare(password, user.password)
 
-    if (user) {
-      const validPass = await bcrypt.compare(password, user.password)
-
-      if (validPass) {
-        return {
-          message: 'Login Succesful',
-          _id: user._id,
-          email: user.email,
-          user_name: user.user_name
-        }
-      } else {
-        throw new Error('Invalid Credentials')
-      }
-    } else {
+    if (!(validPassw && user)) {
       throw new Error('Invalid Credentials')
+    }
+
+    return {
+      _id: user._id,
+      email: user.email,
+      user_name: user.user_name
     }
   }
 }

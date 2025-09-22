@@ -2,4 +2,5 @@ Notes for the process of the creation of the API:
     - we can have different db models for different or even one components, thats the 
     idea of models folder on each component
     - user input validation is solved before calling the db models
-    -   
+    -  passw comparison is done in the db model, bc the model is suposed to be the one that
+    handles user data
