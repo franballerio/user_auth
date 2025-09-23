@@ -1,7 +1,7 @@
 import express from 'express'
 import cookieParser from 'cookie-parser'
 
-import AppError from './utils/error.js';
+import AppError from './utils/AppError.js';
 import { PORT } from './config/config.js'
 import { auth } from './middlewares/auth.js'
 import { errHandler } from './middlewares/err.js'

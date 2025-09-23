@@ -140,7 +140,7 @@
             const userORemail = $('#login-email').value
             const password = $('#login-password').value
 
-            fetch('/login', {
+            fetch('/users/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -173,37 +173,39 @@
                 return
             }
 
-            fetch('/register', {
+            fetch('/users/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ email, user_name, password })
             })
-                .then(res => {
+                .then(async (res) => {
                     console.log(res)
                     if (res.ok) {
-                        registerSpan.innerText = 'Usuario Registrado. Entrando...'
+                        registerSpan.innerText = 'Usuer Registered. login...'
                         registerSpan.style.color = 'green'
                         setTimeout(() => {
-                            fetch('/login', {
+                            fetch('/users/login', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
                                 },
-                                body: JSON.stringify({ email, password })
+                                body: JSON.stringify({ userORemail: email, password: password })
                             })
                                 .then(res => {
                                     if (res.ok) {
-                                        window.location.href = '/protected'
+                                        window.location.href = '/home/protected'
                                     } else {
+                                        console.log()
                                         loginSpan.innerText = 'Error al iniciar sesion'
                                         loginSpan.style.color = 'red'
                                     }
                                 })
-                        }, 1200)
+                        }, 1000)
                     } else {
-                        registerSpan.innerText = 'Error al registrar usuario'
+                        const errData = await res.json()
+                        registerSpan.innerText = `${errData.message}`
                         registerSpan.style.color = 'red'
                     }
                 })
@@ -211,7 +213,7 @@
 
         logoutButton?.addEventListener('click', e => {
             e.preventDefault()
-            fetch('/logout', {
+            fetch('/users/logout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -219,7 +221,7 @@
             })
                 .then(res => {
                     console.log(res)
-                    window.location.href = ('/')
+                    window.location.href = ('/home')
                 })
         })
     </script>

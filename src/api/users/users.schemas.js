@@ -9,8 +9,6 @@ export const login = z.object({
 
   credential: z.union([emailSchema, user_nameSchema]),
 
-  // 🔐 IMPORTANT: This is for validation, NOT for storage.
-  // You should always HASH the password before saving it to a database.
   password: z.string()
     .min(8, { message: 'Password must be at least 8 characters long.' })
     .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/, {
@@ -36,8 +34,6 @@ export const register = z.object({
 
   user_name: z.string().min(0).max(20),
 
-  // 🔐 IMPORTANT: This is for validation, NOT for storage.
-  // You should always HASH the password before saving it to a database.
   password: z.string()
     .min(8, { message: 'Password must be at least 8 characters long.' })
     .regex(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/, {
@@ -58,5 +54,14 @@ export function validateLogin (data) {
 export function validateRegister (data) {
   const result = register.safeParse(data)
   return result
+}
+
+export function zodError(error) {
+  return (
+    z.treeifyError(error).properties?.email?.errors || 
+    z.treeifyError(error).properties?.user_name?.errors ||
+    z.treeifyError(error).properties?.credential?.errors ||
+    z.treeifyError(error).properties?.password?.errors 
+  )
 }
 
