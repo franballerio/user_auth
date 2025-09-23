@@ -3,3 +3,19 @@ node_modules
 .eslint*
 .vscode/
 *.sh
+
+# Test coverage reports
+coverage/
+
+# Jest cache
+.jest/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database files (keep structure, ignore data)
+db/*.json
+!db/.gitkeep
