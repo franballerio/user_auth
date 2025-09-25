@@ -7,4 +7,5 @@ import 'dotenv/config'
 
 export const PORT = Number(process.env.PORT)
 export const SALT_ROUNDS = Number(process.env.SALT_ROUNDS)
-export const JWT_SECRET= process.env.JWT_SECRET
+export const JWT_SECRET = process.env.JWT_SECRET
+export const URI = process.env.URI_MONGODB

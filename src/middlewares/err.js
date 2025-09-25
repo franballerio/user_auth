@@ -5,7 +5,7 @@ export const errHandler = (err, req, res, next) => {
 
   // Log the error for the developer in development mode
   if (process.env.NODE_ENV === 'dev') {
-    console.error('ERROR 💥', err.mes);
+    console.error('ERROR 💥', err.message);
   }
 
   // Send a structured JSON response to the client
