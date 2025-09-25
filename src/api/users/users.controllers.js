@@ -19,11 +19,13 @@ export class Controller {
 
     // validate user info first
     const validUser = validateRegister({ email, user_name, password })
-
+    
     if (!validUser.success) {
       const err = zodError(validUser.error)
       return next(new AppError(err[0], 400))
     }
+    
+    console.log('Valid user')
 
     try {
       // the db manager creates the user and returns it
@@ -48,9 +50,9 @@ export class Controller {
   }
 
   login = async (req, res, next) => {
-    const { userORemail, password } = req.body
+    const { credential, password } = req.body
 
-    const validUser = validateLogin({ credential: userORemail, password: password })
+    const validUser = validateLogin({ credential: credential, password: password })
 
     if (!validUser.success) {
       //console.log(validUser.error)
@@ -58,7 +60,7 @@ export class Controller {
     }
 
     try {
-      const user = await this.model.login({ userORemail: userORemail, password: password })
+      const user = await this.model.login({ credential: credential, password: password })
       // create a jwtoken for session auth
       const token = newToken(user)
       console.log(`User id: ${user._id}, user_name: ${user.user_name} validated`)

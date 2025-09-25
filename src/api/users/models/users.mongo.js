@@ -50,6 +50,7 @@ export class UserMongoDB {
     }
 
     const existentUser = await users.findOne(query)
+    console.log( existentUser )
 
     if ( existentUser ) {
       console.log(existentUser)
@@ -81,11 +82,11 @@ export class UserMongoDB {
     return
   }
 
-  static async login({ userORemail, password }) {
+  static async login({ credential, password }) {
     const query = {
       $or: [
-        { user_name: userORemail },
-        { email: userORemail }
+        { user_name: credential },
+        { email: credential }
       ]
     }
 
