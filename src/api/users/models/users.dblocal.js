@@ -7,7 +7,7 @@ const { Schema } = new DBlocal({ path: './db' })
 // this is the local database, is like a create table
 const User = Schema('User', {
   _id: { type: String, required: true },
-  user_name: { type: String, required: true, unique: true},
+  user_name: { type: String, required: true, unique: true },
   email: { type: String, required: true },
   password: { type: String, required: true }
 })
@@ -17,9 +17,9 @@ export class UserDB {
 
     const existentEmail = User.findOne({ email })
     const existentUser_name = User.findOne({ user_name })
-    
+
     if (!existentUser_name && !existentEmail) {
-      
+
       const user = {
         _id: crypto.randomUUID(),
         email: email,
@@ -49,7 +49,7 @@ export class UserDB {
     const user = await User.findOne(u => u.user_name === userORemail || u.email === userORemail)
     console.log(user)
     const validPassw = user === undefined
-      ? false 
+      ? false
       : await bcrypt.compare(password, user.password)
 
     if (!(validPassw && user)) {
