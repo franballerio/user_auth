@@ -39,14 +39,24 @@ export class UserDB {
     return User.find(user => user)
   }
 
+  static async userById({ id }) {
+    const user = await User.findOne(u => u.id = id)
+
+    if (!user) {
+      throw new Error('User not found')
+    }
+
+    return user
+  }
+
   static clear() {
     User.remove(user => user)
     return
   }
 
-  static async login({ userORemail, password }) {
+  static async login({ credential, password }) {
 
-    const user = await User.findOne(u => u.user_name === userORemail || u.email === userORemail)
+    const user = await User.findOne(u => u.user_name === credential || u.email === credential)
     console.log(user)
     const validPassw = user === undefined
       ? false
