@@ -33,6 +33,10 @@ const users = db.collection('users', {
         password: {
           bsonType: 'string',
           description: 'must be a string and is required'
+        },
+        refreshToken: {
+          bsonType: 'string',
+          description: 'refresh token for the user'
         }
       }
     }
@@ -61,13 +65,30 @@ export class UserMongoDB {
       _id: crypto.randomUUID(),
       email: email,
       user_name: user_name,
-      password: await bcrypt.hash(password, SALT_ROUNDS)
+      password: await bcrypt.hash(password, SALT_ROUNDS),
+      refreshToken: null
     }
 
     const newUser = await users.insertOne(user)
 
     //console.info(newUser)
     return user
+  }
+
+  static async updateRefreshToken(userId, refreshToken) {
+    await users.updateOne(
+      { _id: userId },
+      { $set: { refreshToken: refreshToken } }
+    )
+  }
+
+  static async findByRefreshToken(refreshToken) {
+    const user = await users.findOne({ refreshToken })
+    return user ? {
+      id: user._id,
+      email: user.email,
+      user_name: user.user_name
+    } : null
   }
 
   static users() {

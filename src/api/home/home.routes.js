@@ -8,7 +8,9 @@ homeRouter.get('/', (req, res) => {
 
   try {
     res.render('index', userData)
-  } catch {}  
+  } catch (e) {
+    e
+  }
 })
 
 homeRouter.get('/protected', (req, res) => {

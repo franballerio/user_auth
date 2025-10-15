@@ -1,10 +1,9 @@
 import AppError from '../../utils/AppError.js'
 
-import { newToken } from '../../utils/jwt.js'
+import { newRefreshToken, newToken, validateRefreshToken } from '../../utils/jwt.js'
 import { validateLogin, validateRegister, zodError } from './users.schemas.js'
 
 export class Controller {
-
   constructor({ model }) {
     this.model = model
   }
@@ -16,37 +15,42 @@ export class Controller {
 
   register = async (req, res, next) => {
     const { email, user_name, password } = req.body
-
     // validate user info first
     const validUser = validateRegister({ email, user_name, password })
-    
+
     if (!validUser.success) {
       const err = zodError(validUser.error)
       return next(new AppError(err[0], 400))
     }
-    
-    console.log('Valid user')
 
     try {
-      // the db manager creates the user and returns it
       const newUser = await this.model.create({ email: email, user_name: user_name, password: password })
-
       const token = newToken(newUser)
+      const refreshToken = newRefreshToken(newUser)
 
-      console.log(`User created id: ${newUser._id}`)
+      // Store refresh token in database
+      await this.model.updateRefreshToken(newUser.id, refreshToken)
+
+      console.log(`User id: ${newUser._id} created`)
+
       res
         .cookie('access_cookie', token, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
-          maxAge: 1000 * 60 * 60
+          maxAge: 1000 * 60 * 15 // 15 mins
+        })
+        .cookie('refresh_cookie', refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
         })
         .status(201)
         .json(newUser)
     } catch (error) {
       return next(new AppError(error.message, 409))
     }
-
   }
 
   login = async (req, res, next) => {
@@ -63,6 +67,11 @@ export class Controller {
       const user = await this.model.login({ credential: credential, password: password })
       // create a jwtoken for session auth
       const token = newToken(user)
+      const refreshToken = newRefreshToken(user)
+
+      // Store refresh token in database
+      await this.model.updateRefreshToken(user.id, refreshToken)
+
       console.log(`User id: ${user._id}, user_name: ${user.user_name} validated`)
       res
       // send the token to the client so it can resend it for auth
@@ -70,12 +79,52 @@ export class Controller {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
-          maxAge: 1000 * 60 * 60
+          maxAge: 1000 * 60 * 15 // 15 mins
+        })
+        .cookie('refresh_cookie', refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
         })
         .json(user)
     } catch (error) {
       //console.log(error)
       return next(new AppError(error.message, 401))
+    }
+  }
+
+  refresh = async (req, res, next) => {
+    const refreshToken = req.cookies.refresh_cookie
+
+    if (!refreshToken) {
+      return next(new AppError('No refresh token provided', 401))
+    }
+
+    try {
+      // Validate refresh token
+      validateRefreshToken(refreshToken)
+
+      // Find user by refresh token
+      const existentUser = await this.model.findByRefreshToken(refreshToken)
+      if (!existentUser) {
+        return next(new AppError('User not found', 401))
+      }
+
+      // Issue a new access token
+      const newAccessToken = newToken(existentUser)
+
+      res
+        .cookie('access_cookie', newAccessToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 1000 * 60 * 15
+        })
+        .json({ message: 'Token refreshed successfully' })
+
+    } catch {
+      return next(new AppError('Invalid or expired refresh token', 403))
     }
   }
 
