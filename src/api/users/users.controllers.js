@@ -1,6 +1,6 @@
 import AppError from '../../utils/AppError.js'
 
-import { newRefreshToken, newToken, validateToken } from '../../utils/jwt.js'
+import { newRefreshToken, newToken, validateRefreshToken } from '../../utils/jwt.js'
 import { validateLogin, validateRegister, zodError } from './users.schemas.js'
 
 export class Controller {
@@ -26,6 +26,10 @@ export class Controller {
     try {
       const newUser = await this.model.create({ email: email, user_name: user_name, password: password })
       const token = newToken(newUser)
+      const refreshToken = newRefreshToken(newUser)
+
+      // Store refresh token in database
+      await this.model.updateRefreshToken(newUser.id, refreshToken)
 
       console.log(`User id: ${newUser._id} created`)
 
@@ -34,7 +38,13 @@ export class Controller {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'strict',
-          maxAge: 1000 * 60 * 60
+          maxAge: 1000 * 60 * 15 // 15 mins
+        })
+        .cookie('refresh_cookie', refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
         })
         .status(201)
         .json(newUser)
@@ -59,6 +69,9 @@ export class Controller {
       const token = newToken(user)
       const refreshToken = newRefreshToken(user)
 
+      // Store refresh token in database
+      await this.model.updateRefreshToken(user.id, refreshToken)
+
       console.log(`User id: ${user._id}, user_name: ${user.user_name} validated`)
       res
       // send the token to the client so it can resend it for auth
@@ -82,21 +95,23 @@ export class Controller {
   }
 
   refresh = async (req, res, next) => {
-    const refreshToken = req.cookie.refresh_cookie
+    const refreshToken = req.cookies.refresh_cookie
 
     if (!refreshToken) {
       return next(new AppError('No refresh token provided', 401))
     }
 
     try {
-      const data = validateToken(refreshToken)
+      // Validate refresh token
+      validateRefreshToken(refreshToken)
 
-      const existentUser = this.model.userById(data.id)
+      // Find user by refresh token
+      const existentUser = await this.model.findByRefreshToken(refreshToken)
       if (!existentUser) {
         return next(new AppError('User not found', 401))
       }
 
-      // 3. Issue a new access token
+      // Issue a new access token
       const newAccessToken = newToken(existentUser)
 
       res
@@ -108,7 +123,7 @@ export class Controller {
         })
         .json({ message: 'Token refreshed successfully' })
 
-    } catch  {
+    } catch {
       return next(new AppError('Invalid or expired refresh token', 403))
     }
   }

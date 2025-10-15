@@ -1,8 +1,17 @@
 Notes for the process of the creation of the API:
-    - we can have different db models for different or even one components, thats the 
+    - we can have different db models for different or even one components, thats the
     idea of models folder on each component
     - user input validation is solved before calling the db models
     -  passw comparison is done in the db model, bc the model is suposed to be the one that
     handles user data
     - added an error handler for zod schemas
     - send the exact error of the schema to the frontend on register
+
+    Refresh Token Implementation Changes:
+        - Refresh and normal token uses diff secret key
+        - Auth middleware now checks normal and refresh token.
+        if refresh isn't revoked, it generates a new normal token
+        - save refresh token on databse to be able to revoke it if needed
+        - Fixed refresh endpoint to properly validate refresh tokens
+        endpoint and auth middleware look to do the same, but the refresh endpoint has to be handle_request
+        so the frontend can request a refresh 

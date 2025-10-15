@@ -9,7 +9,8 @@ const User = Schema('User', {
   _id: { type: String, required: true },
   user_name: { type: String, required: true, unique: true },
   email: { type: String, required: true },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  refreshToken: { type: String }
 })
 
 export class UserDB {
@@ -24,7 +25,8 @@ export class UserDB {
         _id: crypto.randomUUID(),
         email: email,
         user_name: user_name,
-        password: await bcrypt.hash(password, SALT_ROUNDS)
+        password: await bcrypt.hash(password, SALT_ROUNDS),
+        refreshToken: null
       }
 
       User.create(user).save()
@@ -40,13 +42,33 @@ export class UserDB {
   }
 
   static async userById({ id }) {
-    const user = await User.findOne(u => u.id = id)
+    const user = await User.findOne(u => u._id === id)
 
     if (!user) {
       throw new Error('User not found')
     }
 
     return user
+  }
+
+  static async updateRefreshToken(userId, refreshToken) {
+    const user = await User.findOne(u => u._id === userId)
+    if (user) {
+      user.refreshToken = refreshToken
+      User.update(user).save()
+    }
+  }
+
+  static async findByRefreshToken(refreshToken) {
+    const user = await User.findOne(u => u.refreshToken === refreshToken)
+    if (user) {
+      return {
+        id: user._id,
+        email: user.email,
+        user_name: user.user_name
+      }
+    }
+    return null
   }
 
   static clear() {
