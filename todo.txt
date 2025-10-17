@@ -3,3 +3,5 @@ tasks to improve the code:
     x create an auth util, to handle token creation outside the controller logic
     x create an error handler to centralize error
     x handle register errors on front
+    x add refresh token to keep session open
+    - add a reset passw functionality

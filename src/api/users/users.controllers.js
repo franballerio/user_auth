@@ -1,6 +1,8 @@
-import AppError from '../../utils/AppError.js'
+import { createTransport } from 'nodemailer'
 
-import { newRefreshToken, newToken, validateRefreshToken } from '../../utils/jwt.js'
+import { EMAIL_SENDER_USER, EMAIL_SENDER_PASSW } from '../../config/config.js'
+import AppError from '../../utils/AppError.js'
+import { newRefreshToken, newToken, newResetToken, validateRefreshToken } from '../../utils/jwt.js'
 import { validateLogin, validateRegister, zodError } from './users.schemas.js'
 
 export class Controller {
@@ -134,6 +136,39 @@ export class Controller {
       .json({ message: 'Logout Successful' })
   }
 
+  reset = (req, res) => {
+    const { email } = req.body
+    const transporter = createTransport({
+      service: 'gmail',
+      auth: {
+        user: EMAIL_SENDER_USER,
+        pass: EMAIL_SENDER_PASSW
+      }
+    })
+
+    const token = newResetToken(email)
+
+    const mailConfig = {
+      from: EMAIL_SENDER_USER,
+      to: email,
+      subject: 'Password reset from user auth',
+      text: `http://localhost:3000/home/new_passw/${token}`
+    }
+
+    try {
+      transporter.sendMail(mailConfig, (error) => {
+        if (error) {
+          console.log(error)
+          throw error
+        }
+        console.log('Email sent')
+      })
+
+      res.status(200).json({ message: 'Email sent' })
+    } catch (error) {
+      throw new AppError(error, 400)
+    }
+  }
   clear = (req, res) => {
     this.model.clear()
     res.send(200)

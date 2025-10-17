@@ -103,6 +103,7 @@
                             <button type="submit">Login</button>
                             <span>&nbsp;</span>
                         </form>
+                        <button id="passw-reset">Forgot your credentials?</button>
                     </div>
 
                     <div class="form-container">
@@ -239,7 +240,14 @@
                     window.location.href = ('/home')
                 })
         })
-    </script>
+
+        const reset = $('#passw-reset')    
+        
+        reset?.addEventListener('click', e => {
+            window.location.href = ('/home/reset')
+        })
+
+        </script>
 </body>
 
 </html>

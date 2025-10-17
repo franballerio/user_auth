@@ -21,6 +21,16 @@ export const newRefreshToken = (user) => {
   return token
 }
 
+export const newResetToken = (email) => {
+  const token = jwt.sign(
+    { email: email },
+    JWT_SECRET,
+    { expiresIn: '10m' }
+  )
+
+  return token
+}
+
 export const validateToken = (token) => {
   try {
     const validated = jwt.verify(token, JWT_SECRET)

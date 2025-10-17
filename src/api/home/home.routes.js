@@ -19,3 +19,10 @@ homeRouter.get('/protected', (req, res) => {
   if (!userData) res.status(403).send('Access denied')
   res.render('protected', userData)
 })
+
+homeRouter.get('/reset', (req, res) => {
+  res.render('reset')
+})
+
+homeRouter.get('/new_passw', (req, res) => {
+})
