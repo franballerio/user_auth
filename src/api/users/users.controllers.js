@@ -2,7 +2,7 @@ import { createTransport } from 'nodemailer'
 
 import { EMAIL_SENDER_USER, EMAIL_SENDER_PASSW } from '../../config/config.js'
 import AppError from '../../utils/AppError.js'
-import { newRefreshToken, newToken, newResetToken, validateRefreshToken } from '../../utils/jwt.js'
+import { newToken, newRefreshToken, newResetToken, validateToken, validateRefreshToken } from '../../utils/jwt.js'
 import { validateLogin, validateRegister, zodError } from './users.schemas.js'
 
 export class Controller {
@@ -28,12 +28,12 @@ export class Controller {
     try {
       const newUser = await this.model.create({ email: email, user_name: user_name, password: password })
       const token = newToken(newUser)
-      const refreshToken = newRefreshToken(newUser)
+      const refreshToken = newRefreshToken(newUser._id)
 
       // Store refresh token in database
-      await this.model.updateRefreshToken(newUser.id, refreshToken)
+      await this.model.updateRefreshToken(newUser._id, refreshToken)
 
-      console.log(`User id: ${newUser._id} created`)
+      console.log(`User created, id: ${newUser._id}`)
 
       res
         .cookie('access_cookie', token, {
@@ -69,10 +69,10 @@ export class Controller {
       const user = await this.model.login({ credential: credential, password: password })
       // create a jwtoken for session auth
       const token = newToken(user)
-      const refreshToken = newRefreshToken(user)
+      const refreshToken = newRefreshToken(user._id)
 
       // Store refresh token in database
-      await this.model.updateRefreshToken(user.id, refreshToken)
+      await this.model.updateRefreshToken(user._id, refreshToken)
 
       console.log(`User id: ${user._id}, user_name: ${user.user_name} validated`)
       res
@@ -136,8 +136,15 @@ export class Controller {
       .json({ message: 'Logout Successful' })
   }
 
-  reset = (req, res) => {
+  reset = async (req, res) => {
     const { email } = req.body
+
+    const user = await this.model.userByEmail({ email: email })
+
+    if (!user) {
+      res.status(200).json({ message: 'Email sent' })
+    }
+
     const transporter = createTransport({
       service: 'gmail',
       auth: {
@@ -152,7 +159,14 @@ export class Controller {
       from: EMAIL_SENDER_USER,
       to: email,
       subject: 'Password reset from user auth',
-      text: `http://localhost:3000/home/new_passw/${token}`
+      text: `
+      Hello, ${user.user_name}, your password reset link is this one:
+      http://localhost:3000/home/new_passw/${token}
+
+      Please do not share it with anyone.
+      
+      If you do not requested this, just ignore it.
+      `
     }
 
     try {
@@ -169,6 +183,7 @@ export class Controller {
       throw new AppError(error, 400)
     }
   }
+
   clear = (req, res) => {
     this.model.clear()
     res.send(200)

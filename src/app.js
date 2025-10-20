@@ -23,7 +23,7 @@ app.set('view engine', 'ejs')
 app.use(auth)
 
 // routes
-app.use('/home', homeRouter)
+app.use('/', homeRouter)
 app.use('/users', usersRouter({ model: UserDB }))
 
 // A route for handling non-existent paths

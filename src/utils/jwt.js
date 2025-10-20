@@ -3,21 +3,19 @@ import { JWT_SECRET, JWT_REFRESH_SECRET } from '../config/config.js'
 
 export const newToken = (user) => {
   const token = jwt.sign(
-    { id: user.id, email: user.email, user_name: user.user_name },
+    { id: user._id, email: user.email, user_name: user.user_name },
     JWT_SECRET,
     { expiresIn: '15m' }
   )
-
   return token
 }
 
-export const newRefreshToken = (user) => {
+export const newRefreshToken = (id) => {
   const token = jwt.sign(
-    { id: user.id },
+    { id: id },
     JWT_REFRESH_SECRET,
     { expiresIn: '7d' }
   )
-
   return token
 }
 
@@ -27,7 +25,6 @@ export const newResetToken = (email) => {
     JWT_SECRET,
     { expiresIn: '10m' }
   )
-
   return token
 }
 

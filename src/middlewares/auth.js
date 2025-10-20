@@ -3,21 +3,29 @@ import { validateToken, validateRefreshToken, newToken } from '../utils/jwt.js'
 import { UserMongoDB } from '../api/users/models/users.mongo.js'
 
 export const auth = async (req, res, next) => {
-  const token = req.cookies.access_cookie
-  const refreshToken = req.cookies.refresh_token
+  const token = req.cookies.access_cookie || null
+  // console.log(token)
+  const refreshToken = req.cookies.refresh_token || null
+  // console.log(refreshToken)
+  const resetToken = req.params.id || null
+  // console.log(resetToken)
   req.session = { userData: null }
 
   try {
     // First, try to validate the access token
-    const data = validateToken(token)
-    req.session.userData = data
+    const payload = validateToken(token)
+
+    console.log(payload)
+
+    req.session.userData = payload
+    console.log(`User ${payload._id} authorized`)
     return next()
   } catch {
     // Access token is invalid or expired, try refresh token
     if (refreshToken) {
       try {
         // Validate refresh token
-        validateRefreshToken(refreshToken)
+        const payload = validateRefreshToken(refreshToken)
 
         // Find user by refresh token
         const user = await UserMongoDB.findByRefreshToken(refreshToken)
@@ -48,7 +56,15 @@ export const auth = async (req, res, next) => {
       }
     }
 
-    // If we reach here, both tokens are invalid
+    if (resetToken) {
+      const payload = validateToken(resetToken)
+
+      req.session.userData = payload
+
+      return next()
+    }
+
+    // If we reach here, all tokens are invalid
     req.session.userData = null
     return next()
   }
