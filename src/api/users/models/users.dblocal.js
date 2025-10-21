@@ -33,6 +33,8 @@ export class UserDB {
 
     User.create(user).save()
 
+    console.log('[INFO] New user created with id:', user._id)
+
     return {
       _id: user._id,
       email: user.email,
@@ -67,14 +69,12 @@ export class UserDB {
   static async updateRefreshToken(userId, token) {
     const user = await User.findOne(u => u._id === userId)
 
-    console.log(user)
-
     if (user) {
-      user.update({ refreshToken: token })
+      user.update({ refreshToken: token }).save()
     }
 
     const userUpdated = await User.findOne(u => u._id === userId)
-    console.log(userUpdated)
+    console.log('[INFO] refreshToken updated for:', userUpdated)
     return
   }
 

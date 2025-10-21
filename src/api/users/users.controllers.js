@@ -27,6 +27,8 @@ export class Controller {
 
     try {
       const newUser = await this.model.create({ email: email, user_name: user_name, password: password })
+      // db throws an error if the user exists
+      console.log('[ACTION] creating new user')
       const token = newToken(newUser)
       const refreshToken = newRefreshToken(newUser._id)
 
