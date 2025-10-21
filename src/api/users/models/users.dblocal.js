@@ -66,9 +66,16 @@ export class UserDB {
 
   static async updateRefreshToken(userId, token) {
     const user = await User.findOne(u => u._id === userId)
+
+    console.log(user)
+
     if (user) {
       user.update({ refreshToken: token })
     }
+
+    const userUpdated = await User.findOne(u => u._id === userId)
+    console.log(userUpdated)
+    return
   }
 
   static async findByRefreshToken(refreshToken) {

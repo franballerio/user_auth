@@ -12,7 +12,8 @@ export function usersRouter({ model }) {
   router.post('/login', controller.login)
   router.post('/refresh', controller.refresh)
   router.post('/logout', controller.logout)
-  router.post('/reset', controller.reset)
+  router.post('/reqNewPassw', controller.reqNewPassw)
+  router.post('/newPassword', controller.newPassword)
 
   router.delete('/', controller.clear)
 

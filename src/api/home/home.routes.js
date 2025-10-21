@@ -15,19 +15,19 @@ homeRouter.get('/', (req, res) => {
 
 homeRouter.get('/protected', (req, res) => {
   const { userData } = req.session
-
   if (!userData)
-    res.render('protected', userData)
+    return res.render('protected')
+
+  return res.render('protected', userData)
 })
 
 homeRouter.get('/reset', (req, res) => {
-  res.render('reset')
+  return res.render('reset')
 })
 
-homeRouter.get('/new_passw/:token', (req, res) => {
+homeRouter.get('/newPassword', (req, res) => {
   const { userData } = req.session
+  if (!userData) return res.status(403).send('Access denied')
 
-  if (!userData) res.status(403).send('Access denied')
-
-  res.render('change-password', userData)
+  return res.render('change-password', userData)
 })

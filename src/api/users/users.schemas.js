@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const UserRole = z.enum(['ADMIN', 'USER', 'GUEST'])
+// const UserRole = z.enum(['ADMIN', 'USER', 'GUEST'])
 
 const emailSchema = z.email({ message: 'Invalid email address.' })
 const user_nameSchema = z.string().min(0).max(20)
@@ -58,10 +58,10 @@ export function validateRegister (data) {
 
 export function zodError(error) {
   return (
-    z.treeifyError(error).properties?.email?.errors || 
+    z.treeifyError(error).properties?.email?.errors ||
     z.treeifyError(error).properties?.user_name?.errors ||
     z.treeifyError(error).properties?.credential?.errors ||
-    z.treeifyError(error).properties?.password?.errors 
+    z.treeifyError(error).properties?.password?.errors
   )
 }
 

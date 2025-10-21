@@ -69,9 +69,7 @@ export class UserMongoDB {
       refreshToken: null
     }
 
-    const newUser = await users.insertOne(user)
-
-    //console.info(newUser)
+    await users.insertOne(user)
     return user
   }
 

@@ -89,6 +89,7 @@ export class Controller {
           sameSite: 'strict',
           maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
         })
+        .status(202)
         .json(user)
     } catch (error) {
       //console.log(error)
@@ -136,14 +137,16 @@ export class Controller {
       .json({ message: 'Logout Successful' })
   }
 
-  reset = async (req, res) => {
+  reqNewPassw = async (req, res, next) => {
     const { email } = req.body
 
     const user = await this.model.userByEmail({ email: email })
 
     if (!user) {
-      res.status(200).json({ message: 'Email sent' })
+      return res.status(200).json({ message: 'Email sent' })
     }
+
+    console.info('Existent email found')
 
     const transporter = createTransport({
       service: 'gmail',
@@ -160,13 +163,13 @@ export class Controller {
       to: email,
       subject: 'Password reset from user auth',
       text: `
-      Hello, ${user.user_name}, your password reset link is this one:
-      http://localhost:3000/home/new_passw/${token}
+Hello, ${user.user_name}, your password reset link is this one:
+http://localhost:3030/newPassword?token=${token}
 
-      Please do not share it with anyone.
+Please do not share it with anyone.
       
-      If you do not requested this, just ignore it.
-      `
+If you do not requested this, just ignore it.
+`
     }
 
     try {
@@ -175,14 +178,16 @@ export class Controller {
           console.log(error)
           throw error
         }
-        console.log('Email sent')
+        console.log('[ACTION][RESET] Email sent')
       })
 
-      res.status(200).json({ message: 'Email sent' })
+      return res.status(200).json({ message: 'Email sent' })
     } catch (error) {
-      throw new AppError(error, 400)
+      return next(new AppError(error.message || 'Failed to send email', 400))
     }
   }
+
+  newPassword = (req, res, next) => {}
 
   clear = (req, res) => {
     this.model.clear()

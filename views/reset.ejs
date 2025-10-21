@@ -108,7 +108,7 @@
         e.preventDefault()
         const email = $('#reset-email').value
 
-        fetch('/users/reset', {
+        fetch('/users/reqNewPassw', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
