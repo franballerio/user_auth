@@ -1,6 +1,8 @@
-import AppError from '../../utils/AppError.js'
+import { createTransport } from 'nodemailer'
 
-import { newRefreshToken, newToken, validateRefreshToken } from '../../utils/jwt.js'
+import { EMAIL_SENDER_USER, EMAIL_SENDER_PASSW } from '../../config/config.js'
+import AppError from '../../utils/AppError.js'
+import { newToken, newRefreshToken, newResetToken, validateRefreshToken } from '../../utils/jwt.js'
 import { validateLogin, validateRegister, zodError } from './users.schemas.js'
 
 export class Controller {
@@ -25,13 +27,15 @@ export class Controller {
 
     try {
       const newUser = await this.model.create({ email: email, user_name: user_name, password: password })
+      // db throws an error if the user exists
+      console.log('[ACTION] creating new user')
       const token = newToken(newUser)
-      const refreshToken = newRefreshToken(newUser)
+      const refreshToken = newRefreshToken(newUser._id)
 
       // Store refresh token in database
-      await this.model.updateRefreshToken(newUser.id, refreshToken)
+      await this.model.updateRefreshToken(newUser._id, refreshToken)
 
-      console.log(`User id: ${newUser._id} created`)
+      console.log(`User created, id: ${newUser._id}`)
 
       res
         .cookie('access_cookie', token, {
@@ -54,25 +58,23 @@ export class Controller {
   }
 
   login = async (req, res, next) => {
+    console.log('[ACTION] Trying to authenticate user')
     const { credential, password } = req.body
-
+    // credential could be user_name or email
     const validUser = validateLogin({ credential: credential, password: password })
 
     if (!validUser.success) {
-      //console.log(validUser.error)
       return next(new AppError('Invalid credentials', 401))
     }
 
     try {
       const user = await this.model.login({ credential: credential, password: password })
-      // create a jwtoken for session auth
       const token = newToken(user)
-      const refreshToken = newRefreshToken(user)
+      const refreshToken = newRefreshToken(user._id)
 
-      // Store refresh token in database
-      await this.model.updateRefreshToken(user.id, refreshToken)
+      await this.model.updateRefreshToken(user._id, refreshToken)
 
-      console.log(`User id: ${user._id}, user_name: ${user.user_name} validated`)
+      console.log(`[INFO] User ${user.user_name} authenticated`)
       res
       // send the token to the client so it can resend it for auth
         .cookie('access_cookie', token, {
@@ -87,7 +89,8 @@ export class Controller {
           sameSite: 'strict',
           maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
         })
-        .json(user)
+        .status(202)
+        .json({ email: user.email, user_name: user.user_name })
     } catch (error) {
       //console.log(error)
       return next(new AppError(error.message, 401))
@@ -128,10 +131,74 @@ export class Controller {
     }
   }
 
-  logout = (req, res) => {
+  logout = async (req, res) => {
+    const { userData } = req.session
+    console.log('[ACTION] Logging out user', userData.user_name)
+    console.log('[ACTION] Revoking users tokens', userData.user_name)
+    await this.model.updateRefreshToken(userData._id, '')
+
     res
       .clearCookie('access_cookie')
+      .clearCookie('refresh_cookie')
       .json({ message: 'Logout Successful' })
+  }
+
+  reqNewPassword = async (req, res, next) => {
+    const { email } = req.body
+    const user = await this.model.userByEmail({ email: email })
+    if (!user) {
+      return res.status(200).json({ message: 'Email sent' })
+    }
+
+    console.info('Existent email found')
+    const transporter = createTransport({
+      service: 'gmail',
+      auth: {
+        user: EMAIL_SENDER_USER,
+        pass: EMAIL_SENDER_PASSW
+      }
+    })
+    const token = newResetToken(email)
+    const mailConfig = {
+      from: EMAIL_SENDER_USER,
+      to: email,
+      subject: 'Password reset from user auth',
+      text: `
+Hello, ${user.user_name}, your password reset link is this one:
+http://localhost:3030/newPassword?token=${token}
+
+Please do not share it with anyone.
+      
+If you do not requested this, just ignore it.
+`
+    }
+
+    try {
+      transporter.sendMail(mailConfig, (error) => {
+        if (error) {
+          console.log(error)
+          throw error
+        }
+        console.log('[ACTION][RESET] Email sent')
+      })
+      return res.status(200).json({ message: 'Email sent' })
+    } catch (error) {
+      return next(new AppError(error.message || 'Failed to send email', 400))
+    }
+  }
+
+  newPassword = async (req, res, next) => {
+    const { email } = req.session.userData
+    const { newPassword } = req.body
+    console.log('[ACTION] Updating password for user', email)
+    try {
+      await this.model.updatePassword(email, newPassword)
+      return res
+        .status(214)
+        .json({ 'status': 'Succesful' })
+    } catch (error) {
+      return next(new AppError(error, 304))
+    }
   }
 
   clear = (req, res) => {

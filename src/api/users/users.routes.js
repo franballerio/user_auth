@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { Controller } from './users.controllers.js'
 
-
 export function usersRouter({ model }) {
 
   const controller = new Controller({ model: model })
@@ -13,6 +12,8 @@ export function usersRouter({ model }) {
   router.post('/login', controller.login)
   router.post('/refresh', controller.refresh)
   router.post('/logout', controller.logout)
+  router.post('/reqNewPassword', controller.reqNewPassword)
+  router.post('/newPassword', controller.newPassword)
 
   router.delete('/', controller.clear)
 

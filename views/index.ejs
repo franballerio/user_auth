@@ -74,6 +74,10 @@
             font-size: 16px;
         }
 
+        #passw-reset {
+            background-color: red;
+        }
+
         button:hover {
             background-color: #218838;
         }
@@ -103,6 +107,7 @@
                             <button type="submit">Login</button>
                             <span>&nbsp;</span>
                         </form>
+                        <button id="passw-reset">Forgot your credentials?</button>
                     </div>
 
                     <div class="form-container">
@@ -150,10 +155,10 @@
             })
                 .then(async res => {
                     if (res.ok) {
-                        loginSpan.innerText = 'Sesion Iniciada... Entrando...'
+                        loginSpan.innerText = 'Entrando...'
                         loginSpan.style.color = 'green'
                         setTimeout(() => {
-                            window.location.href = '/home/protected'
+                            window.location.href = '/protected'
                         }, 1200)
                     } else {
                         const errData = await res.json()
@@ -167,7 +172,7 @@
                 })
         })
 
-        registerForm?.addEventListener('submit', e => {
+        registerForm?.addEventListener('submit', async (e) => {
             e.preventDefault()
             const email = $('#register-email').value
             const user_name = $('#register-username').value
@@ -180,50 +185,27 @@
                 return
             }
 
-            fetch('/users/register', {
+            const register = await fetch('/users/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ email, user_name, password })
             })
-                .then(async (res) => {
-                    console.log(res)
-                    if (res.ok) {
-                        registerSpan.innerText = 'User Registered. Logging in...'
-                        registerSpan.style.color = 'green'
-                        setTimeout(async () => {
-                            try {
-                                const loginRes = await fetch('/users/login', {
-                                    method: 'POST',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    },
-                                    body: JSON.stringify({ credential: email, password })
-                                })
-                                
-                                if (loginRes.ok) {
-                                    window.location.href = '/home/protected'
-                                } else {
-                                    const loginErr = await loginRes.json()
-                                    registerSpan.innerText = loginErr.message || 'Registration successful, please login manually'
-                                    registerSpan.style.color = 'orange'
-                                }
-                            } catch (error) {
-                                registerSpan.innerText = 'Registration successful, please login manually'
-                                registerSpan.style.color = 'orange'
-                            }
-                        }, 1000)
-                    } else {
-                        const errData = await res.json()
-                        registerSpan.innerText = errData.message || 'Registration failed'
-                        registerSpan.style.color = 'red'
-                    }
-                })
-                .catch(error => {
-                    registerSpan.innerText = 'Network error occurred'
-                    registerSpan.style.color = 'red'
-                })
+
+            console.log(register)
+
+            if ( !register.ok ) {
+                registerSpan.innerText = errData.message || 'Registration failed'
+                registerSpan.style.color = 'red'
+            } 
+            
+            registerSpan.innerText = 'User Registered. Logging in...'
+            registerSpan.style.color = 'green'
+
+            setTimeout(async () => {
+              window.location.href = '/protected'
+            }, 3000)
         })
 
         logoutButton?.addEventListener('click', e => {
@@ -236,10 +218,17 @@
             })
                 .then(res => {
                     console.log(res)
-                    window.location.href = ('/home')
+                    window.location.href = ('/')
                 })
         })
-    </script>
+
+        const reset = $('#passw-reset')    
+        
+        reset?.addEventListener('click', e => {
+            window.location.href = ('/reset')
+        })
+
+        </script>
 </body>
 
 </html>

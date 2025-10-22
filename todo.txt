@@ -1,5 +1,5 @@
-tasks to improve the code:
-    x add eslint 
-    x create an auth util, to handle token creation outside the controller logic
-    x create an error handler to centralize error
-    x handle register errors on front
+register flow todo:
+    - add proper logging to show when not in production
+    - consistent http res returns
+    - consistent fetching from front
+     

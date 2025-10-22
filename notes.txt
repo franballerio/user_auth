@@ -14,4 +14,17 @@ Notes for the process of the creation of the API:
         - save refresh token on databse to be able to revoke it if needed
         - Fixed refresh endpoint to properly validate refresh tokens
         endpoint and auth middleware look to do the same, but the refresh endpoint has to be handle_request
-        so the frontend can request a refresh 
+        so the frontend can request a refresh
+
+    Passw reset:
+        - using nodemailer to send emails
+        - the email has to have a link to the reset endpoint with a specific
+        token in it. This token has to be very short lived and it has to he diff
+        from refresh and access tokens
+        - if the email to reset the passw isnt registered, we dont care. Say that the email was sent anyways.
+        this to prevent that attackers doesnt now which email is or not on the database
+        - have to extract the token from the url in the front to properly sent it to the back. So it can check
+        the token payload and update the required user
+        - this shit was a problem
+        - remember your password please!
+         

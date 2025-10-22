@@ -19,21 +19,26 @@ export class UserDB {
     const existentEmail = User.findOne({ email })
     const existentUser_name = User.findOne({ user_name })
 
-    if (!existentUser_name && !existentEmail) {
+    if (existentUser_name || existentEmail) {
+      throw new Error('Error creating user')
+    }
 
-      const user = {
-        _id: crypto.randomUUID(),
-        email: email,
-        user_name: user_name,
-        password: await bcrypt.hash(password, SALT_ROUNDS),
-        refreshToken: null
-      }
+    const user = {
+      _id: crypto.randomUUID(),
+      email: email,
+      user_name: user_name,
+      password: await bcrypt.hash(password, SALT_ROUNDS),
+      refreshToken: ''
+    }
 
-      User.create(user).save()
+    User.create(user).save()
 
-      return user
-    } else {
-      throw new Error('Already registered')
+    console.log('[INFO] New user created with id:', user._id)
+
+    return {
+      _id: user._id,
+      email: user.email,
+      user_name: user.user_name,
     }
   }
 
@@ -51,12 +56,30 @@ export class UserDB {
     return user
   }
 
-  static async updateRefreshToken(userId, refreshToken) {
-    const user = await User.findOne(u => u._id === userId)
-    if (user) {
-      user.refreshToken = refreshToken
-      User.update(user).save()
+  static async userByEmail({ email }) {
+    const user = await User.findOne(u => u.email === email)
+
+    if (!user) {
+      return null
     }
+
+    return user
+  }
+
+  static async updateRefreshToken(userId, token) {
+    const user = await User.findOne(u => u._id === userId)
+    user.update({ refreshToken: token }).save()
+    const userUpdated = await User.findOne(u => u._id === userId)
+    console.log('[INFO] refreshToken updated for:', userUpdated)
+    return
+  }
+
+  static async updatePassword(email, password) {
+    const user = await User.findOne(u => u.email === email)
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+    user.update({ password: hashedPassword }).save()
+    console.log('[INFO] password updated for:', user.email)
+    return
   }
 
   static async findByRefreshToken(refreshToken) {
@@ -77,9 +100,7 @@ export class UserDB {
   }
 
   static async login({ credential, password }) {
-
     const user = await User.findOne(u => u.user_name === credential || u.email === credential)
-    console.log(user)
     const validPassw = user === undefined
       ? false
       : await bcrypt.compare(password, user.password)
