@@ -23,5 +23,8 @@ Notes for the process of the creation of the API:
         from refresh and access tokens
         - if the email to reset the passw isnt registered, we dont care. Say that the email was sent anyways.
         this to prevent that attackers doesnt now which email is or not on the database
-        - 
+        - have to extract the token from the url in the front to properly sent it to the back. So it can check
+        the token payload and update the required user
+        - this shit was a problem
+        - remember your password please!
          

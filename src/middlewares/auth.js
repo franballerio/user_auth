@@ -23,7 +23,7 @@ export const auth = async (req, res, next) => {
   if (refreshToken) {
     console.log('refresh token ok')
     try {
-      const payload = validateRefreshToken(refreshToken)
+      validateRefreshToken(refreshToken)
       const user = await UserDB.findByRefreshToken(refreshToken)
 
       if (user) {
@@ -53,6 +53,7 @@ export const auth = async (req, res, next) => {
     console.log('reset token ok')
     try {
       const payload = validateToken(resetToken)
+      console.log(payload)
       req.session.userData = payload
       return next()
     } catch (e) {

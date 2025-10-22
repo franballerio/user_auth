@@ -225,7 +225,7 @@ This project is licensed under the ISC License.
 ## 🔮 Future Enhancements
 
 - [x] Database migration to PostgreSQL/MongoDB
-- [ ] Password reset functionality
+- [x] Password reset functionality
 - [ ] Email verification
 - [ ] Role-based access control (RBAC)
 - [ ] Rate limiting

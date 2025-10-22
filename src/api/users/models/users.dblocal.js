@@ -68,13 +68,17 @@ export class UserDB {
 
   static async updateRefreshToken(userId, token) {
     const user = await User.findOne(u => u._id === userId)
-
-    if (user) {
-      user.update({ refreshToken: token }).save()
-    }
-
+    user.update({ refreshToken: token }).save()
     const userUpdated = await User.findOne(u => u._id === userId)
     console.log('[INFO] refreshToken updated for:', userUpdated)
+    return
+  }
+
+  static async updatePassword(email, password) {
+    const user = await User.findOne(u => u.email === email)
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS)
+    user.update({ password: hashedPassword }).save()
+    console.log('[INFO] password updated for:', user.email)
     return
   }
 
@@ -96,7 +100,6 @@ export class UserDB {
   }
 
   static async login({ credential, password }) {
-
     const user = await User.findOne(u => u.user_name === credential || u.email === credential)
     const validPassw = user === undefined
       ? false

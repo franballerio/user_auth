@@ -19,7 +19,7 @@ homeRouter.get('/protected', (req, res) => {
 
   if (!userData) {
     console.log('[INFO] no-auth user entering protected page')
-    return res.render('protected')
+    return res.status(403).send('Access denied')
   }
 
   console.log('[INFO] auth user entering protected page')
@@ -32,6 +32,7 @@ homeRouter.get('/reset', (req, res) => {
 
 homeRouter.get('/newPassword', (req, res) => {
   const { userData } = req.session
+  console.log(userData)
 
   if (!userData) {
     console.log('[INFO] no-auth user trying reset-password page. Acces denied')
