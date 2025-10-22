@@ -172,7 +172,7 @@
                 })
         })
 
-        registerForm?.addEventListener('submit', e => {
+        registerForm?.addEventListener('submit', async (e) => {
             e.preventDefault()
             const email = $('#register-email').value
             const user_name = $('#register-username').value
@@ -185,7 +185,7 @@
                 return
             }
 
-            const register = fetch('/users/register', {
+            const register = await fetch('/users/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -193,18 +193,21 @@
                 body: JSON.stringify({ email, user_name, password })
             })
 
-            if (register) {
-              registerSpan.innerText = 'User Registered. Logging in...'
-              registerSpan.style.color = 'green'
+            console.log(register)
 
-              setTimeout(async () => {
-                window.location.href = '/protected'
-              }, 3000)
-            } else {
-              registerSpan.innerText = errData.message || 'Registration failed'
-              registerSpan.style.color = 'red'
-            }
-                // .then(async (res) => {
+            if ( !register.ok ) {
+                registerSpan.innerText = errData.message || 'Registration failed'
+                registerSpan.style.color = 'red'
+            } 
+            
+            registerSpan.innerText = 'User Registered. Logging in...'
+            registerSpan.style.color = 'green'
+
+            setTimeout(async () => {
+              window.location.href = '/protected'
+            }, 3000)
+            
+            // .then(async (res) => {
                 //     console.log(res)
                 //     if (res.ok) {
                 //         registerSpan.innerText = 'User Registered. Logging in...'
